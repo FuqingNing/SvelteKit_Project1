@@ -1,10 +1,9 @@
 <script lang="ts">
-	// 1. change the color according to win or lose.
-	// 2. make it unclickable after win or lose.
 	import { onMount } from 'svelte';
 	import * as PIXI from 'pixi.js';
 	import { writable } from 'svelte/store';
 	let app: PIXI.Application;
+	// let board = writable<Array<Array<{ hasMine: boolean; status: string }>>>([]);
 	let board: Array<Array<{ hasMine: boolean; status: string }>> = [];
 	const rows = 10;
 	const columns = 10;
@@ -40,9 +39,11 @@
 		initializeBoard();
 		drawBoard();
 		// Make the stage interactive and listen for pointer down events
-		app.stage.interactive = true;
+		app.stage.interactive = !gameOver;
+
 		app.stage.on('pointerdown', onCellClick);
 	});
+
 	function initializeBoard() {
 		for (let y = 0; y < rows; y++) {
 			board[y] = [];
@@ -75,8 +76,13 @@
 				let color; // local variable to store color
 				switch (cell.status) {
 					case 'closed':
-						color = cellColor;
-						break;
+						if (gameOver) {
+							color = 0xff0000; // if game over, color is red
+							break;
+						} else {
+							color = cellColor; // if cell closed, color is grey
+							break;
+						}
 					case 'mine':
 						createImageForCell(x, y, BOMB_IMAGE_BASE64);
 						continue;
@@ -90,9 +96,10 @@
 						}
 						continue;
 					default:
-						color = openCellColor;
+						color = openCellColor; //if cell open, color is light grey
 						PIXI.LineStyle;
 				}
+				//for each cell, draw a rectangle according to the color from switch sentence
 				graphics.beginFill(color);
 				graphics.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
 				graphics.lineStyle(1, 0x000000, 1);
@@ -177,6 +184,7 @@
 	}
 	function restartGame() {
 		gameOver = false;
+		app.stage.interactive = true;
 		$currentScore = 0;
 		initializeBoard();
 		drawBoard();
@@ -239,6 +247,7 @@
 		win = true;
 	}
 	function showWinResult() {
+		app.stage.interactive = false;
 		let winPopup = document.getElementById('winPopup');
 		let restartButton = document.getElementById('WinrestartButton');
 		if (winPopup) winPopup.style.display = 'flex';
@@ -250,8 +259,10 @@
 		}
 	}
 	function showResult() {
+		app.stage.interactive = false;
 		let gameOverPopup = document.getElementById('gameOverPopup');
 		let restartButton = document.getElementById('restartButton');
+
 		if (gameOverPopup) gameOverPopup.style.display = 'flex';
 		if (restartButton) {
 			restartButton.addEventListener('click', function () {
