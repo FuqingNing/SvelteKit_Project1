@@ -2,15 +2,10 @@
 	import { onMount } from 'svelte';
 	import * as PIXI from 'pixi.js';
 	import { writable } from 'svelte/store';
+
 	let app: PIXI.Application;
-	// let board = writable<Array<Array<{ hasMine: boolean; status: string }>>>([]);
+	let graphics: PIXI.Graphics;
 	let board: Array<Array<{ hasMine: boolean; status: string }>> = [];
-	const rows = 10;
-	const columns = 10;
-	const mineCount = 10;
-	const cellSize = 50;
-	const cellColor = 0x808080; // grey
-	const openCellColor = 0xc0c0c0; // light grey
 	let gameOver = false;
 	let win = false;
 	let currentScore = writable(0); // create a store with initial value 0
@@ -20,7 +15,12 @@
 	// image of bomb store in base64
 	const BOMB_IMAGE_BASE64 =
 		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAABMlBMVEX///8nJycYGBjMzs0AAAAEBAQXFxf///4pKSkICAglJSUSEhIhISEeHh4ODg4aGhrl5eX29vbO0M/u7u7Dw8N+fn7Y2NhnZ2e1tbVRUVGsrKyZmZnf399GRkaHh4fx8fF0dHRfX19JSUlXV1fFxcWjo6M5OTmRkZEwMDD/9vX/mxWvr6/yQAD8zQW5ubk+Pj7WpKPbvbnXlJLnq6X83NfKhoH1yMPPAAD86Ojifnfij4vkAADca2TkMR/qKADln5rzFQDWXVD/YQ3UKwXbOCXgiYjvQgDrqK3stLLZST7+dQD7UgDwMwBGAAD+sxT9hgDvmpMwAAD9pAv/xAz2YQD7cQTYbmzJIQysAADzjwLjKzC4PTUpGh2BAAD2uQaRCAD/39b/agC6YWLiVlDkPgDlurP2M+RCAAAK4UlEQVR4nO2cCVvbSBJAJbslS7IOH9jC+MCAjc3pJHgJV0gCIUMCG3a4MpndZTeb7P//C1vVsuVDvrAztDJb75sY8DHoUdVV3W3JkkQQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBBE20oVsIS36IP4wFuddmyFWeU70sfwRLJY8PY/6vOjj+eFU0UtxcuWMpjv4/XJC9CH9UBZzPHDK9kI+n3PmF1bwxz9TqhZ0ECqn8nGrqGl1litXNyy45yfN1EI62X9Xlkds3m3ofAwqzMllHA2+ZkUc4KyUGdNWy/nUYucujKClrOS6Cg2Ls6rLmBz4Y4SfqO+Qy7dKSdpkrFhYwtgxd66QyG4U4WHV3YYvJbFHOw0aY6vwT1FQcrWKkYTYaYmyAT+77fK5zZtiBW5/uoKah4IpLTqmE9d5zFg5UcOvda23sGDiFiGhf7ogJuCYK5JryZqmmarOHbHIuHgb7X5mFMO8pDBT1KFOCZi4UoXJmoyOmhkHDYUtL+Tgtq/7YUXCtlgQc6RTMgc1MinVDdlDkzVDxVjp8K/a99wCY06mxtiGkCN9HMnCdt7N1b1Op2Vc3cD4aW3LOMM4lgMvW4V4w1Qu8/QH/DgK1SW93R8UhZdQiFncMtqKEEcb7qqn+l+ZYWwpr7OciKOemHS12GWnAzjuuKhiW3I7jJqDJad/irYBAxFf6N8R8296vhFItuwlJrNVR1VVywQX2eCNwpNU5VYgNVOHp9V6X55iTC83GEtKMfgvFguFUzepHNdTVMvSWdEt5Wuu7nglVDOsOI8lU42WomzDT729Lw0xzMMfCeamzyTuBzfPu54g1jjt8sSMm4YiZ+bas8uMKvtl1LK5o9PKVS0eaO91prSK6Ysd8EHJ5l+eXmUwVS98ssGWt7snz0VT9h2hG/LRabYU1f4oLkMxhRiWJWn35Z531/5B+0FMW3GkVzCAEC97udL7iNsxREfD5qna+hkTdaHrySVvygMddO/wiCvtHb5uPxjbW3simwFEMYC2oVnxwArWb/ZtSQurq80z1XFQsWtFCNNvreZikY29Oj7He16/aRuuHTx7EpeB5FHQgk6+stj/UNWW+9A0nqrQHS0VFZneedEiVOHyAiwyktLbk9M9Kbb2bnOHF5i9g5dnT+rUA+SWArMWWQlORlLxfkFUtDBTTVN1Io4DTWOl83xYMuZqFjR+6eDk5EiSdt5f/AJ3752dvjkQV0ozOHKgzdnBZU82YgQNvWYIVdeJAGrPUIT1oc2KNii+uFiHPP3w8eIc/I4vLs8kYf0Rq4MKguZS4KGKPVAQp22+ogN9knW2vGFGZJZgbsP+uvnp6nTn+/XF386Obz++34/FRMUwz3QWwbLBAjvzJTZEsFVGFRWD6EAQt/3X4A7VSq3E2K+n1ze3h3cPF4cn6+ub9+IaxTZEkAuabt8jc5qqDReUZZzGoSHUGq3rZfgXy7GVkvX5auv6/fXN3frN9ft7eGBtT4gl/sk9Eau3zFSWmTFK0Cs3Oo5D3APowsXG49Yyv33c2vpys3UDnr//cnb04e/PhWTpKqwYPBHD7BT9dLWhmCMDiECNUWyspb3RT7rYTBr/+O0E9ba2Pp1cvr/dPNwX0+6xT6CdrTPZ0DYSSSmZqNRyLD5iAPpRhLk4KCrBzTWYAP76z9OLK/Tbeli//vTl9vOuED9Y7UBbgyqqbkiJumGo3rLQMsfrcSI2X1L1b2ZIUvNf4Pew1eLmavPVvyUx89I6H4RODqtomXtp8tjk7GA5OIGr9/1PY839w8uTr3d3d58wRzGKdxfHb3eaAkbhAlN0KKJFvpRYmjRyHQwVN976ZurJZ/dvj+7v9/d/v8Us/QI5evX1YvPN4ef/PH9qxyTMrmAyGuF9MG1NMPT64dPS/qleS2PtdH3r4WHr4+3V8bf91+e7TQEriyqvo7rXravqeKF+NIvP2Qa8hw8jbmfz4ebuy9bdm4/feZURkKNJEyZYmlHkP6QHzLDHCmqGOiiIXk35dnVzd3h7c/vt+8m+JGZGOg+jEBZMXghzjx+FiMobfmDJBTSP1+9evb68vjg/u3y3xrdsnryWLsMolOU4z7HMFCHEKDo8iIP2uM9Ovp42Y6dX33djH9600/RpDRPQ+eAgYa0qJcuBZe6EhlYkEmf9O8Dosfbu5BS89k++N6Xm4YGQJIU6gxPSSC09X49MJwjrRDXi6MFJTUw6Pz5twpfdS1joS6/fCdmDwoUcHqUz0RRtiKGh8rVF92aUV1WODpv4/drpK+gRsbdNAYJJ3u1nBQ2h1vSsnTFczZe73rg7eoU/7j0TkKZzTInzCdqj5mkBVFCExVLf2QmxF7utWJ5/4M1RxAkaNcacWdTahrDG1wOnmMT4bjAGce9eUC+UpBU2aoviMYY4EIecJwQd8L/CNtg03itmJgIdMd7/Bo1PTBIWQWmRT2hmhdfSQKnpQtwGm1Twdy9mom24OuTXCHwvJvUDDR2Ymg7+LTGBbzhtg+HsgpqJ24kRKKZiLEYBC4th+9mPMbT4ljAYhu90vQUwnG7B1GPohNvQmnUgarIaXkMch87MgkaIDStgGBm5bT+JIh+GIa00WTScOU0dz1BhumifIAmY0zizpqmXpNjxl0X7BEkypqvqbP1Cs3zD/nfmwkCRKZHZ0lSTvRyNwMw7L1pnAGVYAUfUmWqNF0K+2xbGC0mwITqRWRbBrVE4cCsqDBSw1ERmGIntVoHDUBZtMxDG8ESD6YPohzA+aF8/DJQZi0MQpy42rV7IZzSV8b9OAHM8TTFPp3Fsdwre79Xwzdk4Ok/TyFRtv7UwbPWKsmiVIWQYntSkqtMMRcOPIE5KA2e0h4QCw6Y/zVD0e71XZxqiTYayxFti5NGKXYIq1pnwXlSZglrjTUseoYgXzTg9ITREe4xgpRXExykakc4gxFFYTSbDdtGBT5a1Ti+EY560Z+Bbhp0Q2njlTBTIFhKhbBlQTnUsNuhoahM4arLVJeidPcsNOdnEoHf0hZJU23mKRcMY56h1tcF2jrrZaEcRLYMXRQulwtonM4Oiao0+31I2nO4A8hw1u+1artlQfUhGhg9F1XccEb9ePxXrqMI2egLoE6bVVANbhn/sMMMx5WCy4mVPjtobQC5Yyg42DJPjosEVe4JjGjLX1FqXVZqentNjiIJLQwUhV0MzHnHypvcWENBxHMtELMvpC16XYDE1XBAGZWgUU/yKJ6ffQfUIyvmCjZGCoCjazIcrQkUNSA6FX+7UiI4WDNNYTJhM8fviBH4qnhq8PGIMtoeiaLEO6QZjuj4kIwdmKCtnx/mFypBf+wRhHJOojh9Alp9AMBqqzi/N4bXMenysI45AVpwbm6HRMFUaj2QZw6jbwaraQeV+2OcnMAybIJBt8EudbQhkryXPTkeN8/xkbmWSAEbD+eEY86utDxqIY893HH6Duqpq696nKyxtj6+hGMBwjcEu5lZaHxUB+WrbccS28XMVuJ6VmZvQL7SrfqCQb/ifiKH4nxgB6O5CCvxGTtS8/AzdOjhAYqHcULs/44rVV0rzqUnCl/oJ9DySieh8vpQBSrXqdiUFREfHD+zCtr4fS3IxUcimJmoM2UL4tmgmJrmYBtGBGZoCs0LiZwvccGKxZDeiD4cgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgiP9n/gdXfuEJlwJNtAAAAABJRU5ErkJggg==';
-
+	const rows = 10;
+	const columns = 10;
+	const mineCount = 10;
+	const cellSize = 50;
+	const cellColor = 0x808080; // grey
+	const openCellColor = 0xc0c0c0; // light grey
 	onMount(() => {
 		app = new PIXI.Application<HTMLCanvasElement>({
 			width: columns * cellSize,
@@ -35,12 +35,11 @@
 		(document.getElementById('game-board') as HTMLElement).appendChild(
 			app.view as HTMLCanvasElement
 		);
-		// Initialize and draw the game board
 		initializeBoard();
 		drawBoard();
+
 		// Make the stage interactive and listen for pointer down events
 		app.stage.interactive = !gameOver;
-
 		app.stage.on('pointerdown', onCellClick);
 	});
 
@@ -107,6 +106,43 @@
 			}
 		}
 		app.stage.addChild(graphics);
+	}
+	function drawCell(x: number, y: number, cell: { hasMine: boolean; status: string }) {
+		let color;
+		switch (cell.status) {
+			case 'closed':
+				color = gameOver && cell.hasMine ? 0xff0000 : cellColor;
+				break;
+			case 'mine':
+				createImageForCell(x, y, BOMB_IMAGE_BASE64);
+				return;
+			case 'flagged':
+				createImageForCell(x, y, FLAG_IMAGE_BASE64);
+				return;
+			case 'open':
+				color = openCellColor;
+				const adjacentMines = getAdjacentMines(x, y);
+				if (adjacentMines > 0) {
+					createTextForCell(x, y, adjacentMines);
+					return;
+				}
+				break;
+			default:
+				color = openCellColor;
+				break;
+		}
+
+		graphics.beginFill(color);
+		graphics.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
+		graphics.lineStyle(1, 0x000000, 1);
+		graphics.endFill();
+	}
+
+	$: if (gameOver) {
+		showResult();
+	}
+	$: if (win) {
+		showWinResult();
 	}
 
 	function onCellClick(event: any) {
@@ -188,12 +224,6 @@
 		$currentScore = 0;
 		initializeBoard();
 		drawBoard();
-	}
-	$: if (gameOver) {
-		showResult();
-	}
-	$: if (win) {
-		showWinResult();
 	}
 
 	function getAdjacentMines(x: number, y: number) {
