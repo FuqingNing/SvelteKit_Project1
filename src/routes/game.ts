@@ -19,3 +19,20 @@ export function initializeBoard(rows: number, columns: number,board: Array<Array
         }
     }
 }
+export function checkWin(board: Array<Array<{ hasMine: boolean; status: string }>>, rows: number, columns: number): boolean {
+    let allNonMinesRevealed = true;
+
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < columns; x++) {
+            if (board[y][x].status === 'closed' && !board[y][x].hasMine) {
+                allNonMinesRevealed = false;
+                break;
+            }
+        }
+        if (!allNonMinesRevealed) {
+            break;
+        }
+    }
+
+    return allNonMinesRevealed;
+}
