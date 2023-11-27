@@ -117,8 +117,9 @@
 		const x = Math.floor(position.x / cellSize);
 		const y = Math.floor(position.y / cellSize);
 		if (x >= 0 && x < columns && y >= 0 && y < rows) {
-			if (isRightClick) {
+			if (isRightClick) {//bug
 				game.toggleFlag(board, x, y, currentScore);
+
 				// toggleFlag(x, y); // right click
 			} else {
 				revealCell(x, y); // left click

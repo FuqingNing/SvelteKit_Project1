@@ -1,3 +1,7 @@
+import { writable } from 'svelte/store';
+
+export const isGameWon = writable(false);
+
 export function initializeBoard(board: Array<Array<{ hasMine: boolean; status: string }>>,rows: number, columns: number,mineCount: number) {
     for (let y = 0; y < rows; y++) {
         board[y] = [];
@@ -62,5 +66,6 @@ export function toggleFlag(board: Array<Array<{ hasMine: boolean; status: string
         currentScore.update((n) => n + 1); // update score
     }
     // checkWin();
-    checkWin(board, y, x);
-}
+    const hasWon = checkWin(board, y, x);
+    isGameWon.set(hasWon);
+    return hasWon;}
