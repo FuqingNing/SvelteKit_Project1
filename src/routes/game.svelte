@@ -2,9 +2,11 @@
 	import { onMount } from 'svelte';
 	import * as PIXI from 'pixi.js';
 	import { writable } from 'svelte/store';
+	import * as game from './game';
+	import { GameRender } from './gameRender';
 
 	let app: PIXI.Application;
-	let graphics: PIXI.Graphics;
+	// let graphics: PIXI.Graphics;
 	let board: Array<Array<{ hasMine: boolean; status: string }>> = [];
 	let gameOver = false;
 	let win = false;
@@ -35,7 +37,8 @@
 		(document.getElementById('game-board') as HTMLElement).appendChild(
 			app.view as HTMLCanvasElement
 		);
-		initializeBoard();
+		// initializeBoard();
+		game.initializeBoard(rows, columns, board, mineCount);
 		drawBoard();
 
 		// Make the stage interactive and listen for pointer down events
@@ -43,31 +46,32 @@
 		app.stage.on('pointerdown', onCellClick);
 	});
 
-	function initializeBoard() {
-		for (let y = 0; y < rows; y++) {
-			board[y] = [];
-			for (let x = 0; x < columns; x++) {
-				board[y][x] = {
-					hasMine: false,
-					status: 'closed'
-				};
-			}
-		}
-		// random bombs placed
-		let minesPlaced = 0;
-		while (minesPlaced < mineCount) {
-			const x = Math.floor(Math.random() * columns);
-			const y = Math.floor(Math.random() * rows);
-			if (!board[y][x].hasMine) {
-				board[y][x].hasMine = true;
-				minesPlaced++;
-			}
-		}
-	}
+	// function initializeBoard() {
+	// 	for (let y = 0; y < rows; y++) {
+	// 		board[y] = [];
+	// 		for (let x = 0; x < columns; x++) {
+	// 			board[y][x] = {
+	// 				hasMine: false,
+	// 				status: 'closed'
+	// 			};
+	// 		}
+	// 	}
+	// 	// random bombs placed
+	// 	let minesPlaced = 0;
+	// 	while (minesPlaced < mineCount) {
+	// 		const x = Math.floor(Math.random() * columns);
+	// 		const y = Math.floor(Math.random() * rows);
+	// 		if (!board[y][x].hasMine) {
+	// 			board[y][x].hasMine = true;
+	// 			minesPlaced++;
+	// 		}
+	// 	}
+	// }
 	function drawBoard() {
 		const graphics = new PIXI.Graphics();
 		// clear all children
 		app.stage.removeChildren();
+		const render = new GameRender(app, cellSize);
 		// draw board
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < columns; x++) {
@@ -83,10 +87,12 @@
 							break;
 						}
 					case 'mine':
-						createImageForCell(x, y, BOMB_IMAGE_BASE64);
+						// createImageForCell(x, y, BOMB_IMAGE_BASE64);.
+						render.createImageForCell(x, y, BOMB_IMAGE_BASE64);
 						continue;
 					case 'flagged':
-						createImageForCell(x, y, FLAG_IMAGE_BASE64);
+						// createImageForCell(x, y, FLAG_IMAGE_BASE64);
+						render.createImageForCell(x, y, FLAG_IMAGE_BASE64);
 						continue;
 					case 'open':
 						const adjacentMines = getAdjacentMines(x, y);
@@ -107,36 +113,36 @@
 		}
 		app.stage.addChild(graphics);
 	}
-	function drawCell(x: number, y: number, cell: { hasMine: boolean; status: string }) {
-		let color;
-		switch (cell.status) {
-			case 'closed':
-				color = gameOver && cell.hasMine ? 0xff0000 : cellColor;
-				break;
-			case 'mine':
-				createImageForCell(x, y, BOMB_IMAGE_BASE64);
-				return;
-			case 'flagged':
-				createImageForCell(x, y, FLAG_IMAGE_BASE64);
-				return;
-			case 'open':
-				color = openCellColor;
-				const adjacentMines = getAdjacentMines(x, y);
-				if (adjacentMines > 0) {
-					createTextForCell(x, y, adjacentMines);
-					return;
-				}
-				break;
-			default:
-				color = openCellColor;
-				break;
-		}
+	// function drawCell(x: number, y: number, cell: { hasMine: boolean; status: string }) {
+	// 	let color;
+	// 	switch (cell.status) {
+	// 		case 'closed':
+	// 			color = gameOver && cell.hasMine ? 0xff0000 : cellColor;
+	// 			break;
+	// 		case 'mine':
+	// 			createImageForCell(x, y, BOMB_IMAGE_BASE64);
+	// 			return;
+	// 		case 'flagged':
+	// 			createImageForCell(x, y, FLAG_IMAGE_BASE64);
+	// 			return;
+	// 		case 'open':
+	// 			color = openCellColor;
+	// 			const adjacentMines = getAdjacentMines(x, y);
+	// 			if (adjacentMines > 0) {
+	// 				createTextForCell(x, y, adjacentMines);
+	// 				return;
+	// 			}
+	// 			break;
+	// 		default:
+	// 			color = openCellColor;
+	// 			break;
+	// 	}
 
-		graphics.beginFill(color);
-		graphics.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
-		graphics.lineStyle(1, 0x000000, 1);
-		graphics.endFill();
-	}
+	// 	graphics.beginFill(color);
+	// 	graphics.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
+	// 	graphics.lineStyle(1, 0x000000, 1);
+	// 	graphics.endFill();
+	// }
 
 	$: if (gameOver) {
 		showResult();
@@ -209,11 +215,13 @@
 
 	function revealAllMines() {
 		drawBoard();
+		const render = new GameRender(app, cellSize);
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < columns; x++) {
 				if (board[y][x].hasMine) {
 					board[y][x].status = 'mine';
-					createImageForCell(x, y, BOMB_IMAGE_BASE64);
+					// createImageForCell(x, y, BOMB_IMAGE_BASE64);
+					render.createImageForCell(x, y, BOMB_IMAGE_BASE64);
 				}
 			}
 		}
@@ -222,7 +230,8 @@
 		gameOver = false;
 		app.stage.interactive = true;
 		$currentScore = 0;
-		initializeBoard();
+		// initializeBoard();
+		game.initializeBoard(rows, columns, board, mineCount);
 		drawBoard();
 	}
 
