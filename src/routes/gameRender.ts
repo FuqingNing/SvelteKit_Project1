@@ -19,5 +19,16 @@ export class GameRender {
         this.app.stage.addChild(sprite);
     }
 
-    // 可以在这里添加更多相关的方法
+    createTextForCell(x: number, y: number, adjacentMines: number) {
+		const textStyle = new PIXI.TextStyle({
+			fill: 0x000000,
+			fontSize: this.cellSize / 2,
+			align: 'center'
+		});
+		const text = new PIXI.Text(adjacentMines.toString(), textStyle);
+		text.x = x * this.cellSize + this.cellSize / 2;
+		text.y = y * this.cellSize + this.cellSize / 2;
+		text.anchor.set(0.5);
+		this.app.stage.addChild(text);
+	}
 }

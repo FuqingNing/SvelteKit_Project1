@@ -6,11 +6,11 @@
 	import { GameRender } from './gameRender';
 
 	let app: PIXI.Application;
-	// let graphics: PIXI.Graphics;
 	let board: Array<Array<{ hasMine: boolean; status: string }>> = [];
 	let gameOver = false;
 	let win = false;
-	let currentScore = writable(0); // create a store with initial value 0
+	let currentScore = writable(0);
+	let render: GameRender;
 	// image of flag store in base64
 	const FLAG_IMAGE_BASE64 =
 		'data:image/png;base64,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';
@@ -23,50 +23,47 @@
 	const cellSize = 50;
 	const cellColor = 0x808080; // grey
 	const openCellColor = 0xc0c0c0; // light grey
+	// onMount(() => {
+	// 	app = new PIXI.Application<HTMLCanvasElement>({
+	// 		width: columns * cellSize,
+	// 		height: rows * cellSize,
+	// 		backgroundColor: 0xeeeeee
+	// 	});
+	// 	// Prevent the context menu from showing on right click
+	// 	(app.view as HTMLCanvasElement).oncontextmenu = (e) => {
+	// 		e.preventDefault();
+	// 	};
+	// 	// Append the PIXI canvas to the game-board div
+	// 	(document.getElementById('game-board') as HTMLElement).appendChild(
+	// 		app.view as HTMLCanvasElement
+	// 	);
+	// 	// initializeBoard();
+	// 	game.initializeBoard(rows, columns, board, mineCount);
+	// 	drawBoard();
+
+	// 	// Make the stage interactive and listen for pointer down events
+	// 	app.stage.interactive = !gameOver;
+	// 	app.stage.on('pointerdown', onCellClick);
+	// });
 	onMount(() => {
-		app = new PIXI.Application<HTMLCanvasElement>({
+		app = new PIXI.Application({
 			width: columns * cellSize,
 			height: rows * cellSize,
 			backgroundColor: 0xeeeeee
 		});
-		// Prevent the context menu from showing on right click
-		(app.view as HTMLCanvasElement).oncontextmenu = (e) => {
-			e.preventDefault();
-		};
-		// Append the PIXI canvas to the game-board div
-		(document.getElementById('game-board') as HTMLElement).appendChild(
-			app.view as HTMLCanvasElement
-		);
-		// initializeBoard();
+
+		const canvasElement = app.view as HTMLCanvasElement;
+		canvasElement.oncontextmenu = (e: MouseEvent) => e.preventDefault();
+
+		document.getElementById('game-board')?.appendChild(canvasElement);
+
 		game.initializeBoard(rows, columns, board, mineCount);
+		render = new GameRender(app, cellSize); // 初始化 GameRender
 		drawBoard();
 
-		// Make the stage interactive and listen for pointer down events
 		app.stage.interactive = !gameOver;
 		app.stage.on('pointerdown', onCellClick);
 	});
-
-	// function initializeBoard() {
-	// 	for (let y = 0; y < rows; y++) {
-	// 		board[y] = [];
-	// 		for (let x = 0; x < columns; x++) {
-	// 			board[y][x] = {
-	// 				hasMine: false,
-	// 				status: 'closed'
-	// 			};
-	// 		}
-	// 	}
-	// 	// random bombs placed
-	// 	let minesPlaced = 0;
-	// 	while (minesPlaced < mineCount) {
-	// 		const x = Math.floor(Math.random() * columns);
-	// 		const y = Math.floor(Math.random() * rows);
-	// 		if (!board[y][x].hasMine) {
-	// 			board[y][x].hasMine = true;
-	// 			minesPlaced++;
-	// 		}
-	// 	}
-	// }
 	function drawBoard() {
 		const graphics = new PIXI.Graphics();
 		// clear all children
@@ -97,7 +94,8 @@
 					case 'open':
 						const adjacentMines = getAdjacentMines(x, y);
 						if (adjacentMines > 0) {
-							createTextForCell(x, y, adjacentMines);
+							// createTextForCell(x, y, adjacentMines);
+							render.createTextForCell(x, y, adjacentMines);
 						}
 						continue;
 					default:
@@ -113,44 +111,6 @@
 		}
 		app.stage.addChild(graphics);
 	}
-	// function drawCell(x: number, y: number, cell: { hasMine: boolean; status: string }) {
-	// 	let color;
-	// 	switch (cell.status) {
-	// 		case 'closed':
-	// 			color = gameOver && cell.hasMine ? 0xff0000 : cellColor;
-	// 			break;
-	// 		case 'mine':
-	// 			createImageForCell(x, y, BOMB_IMAGE_BASE64);
-	// 			return;
-	// 		case 'flagged':
-	// 			createImageForCell(x, y, FLAG_IMAGE_BASE64);
-	// 			return;
-	// 		case 'open':
-	// 			color = openCellColor;
-	// 			const adjacentMines = getAdjacentMines(x, y);
-	// 			if (adjacentMines > 0) {
-	// 				createTextForCell(x, y, adjacentMines);
-	// 				return;
-	// 			}
-	// 			break;
-	// 		default:
-	// 			color = openCellColor;
-	// 			break;
-	// 	}
-
-	// 	graphics.beginFill(color);
-	// 	graphics.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
-	// 	graphics.lineStyle(1, 0x000000, 1);
-	// 	graphics.endFill();
-	// }
-
-	$: if (gameOver) {
-		showResult();
-	}
-	$: if (win) {
-		showWinResult();
-	}
-
 	function onCellClick(event: any) {
 		const isRightClick = event.data.button === 2; // right click
 		const position = event.data.getLocalPosition(app.stage);
@@ -177,6 +137,7 @@
 		// nothing happen if open
 	}
 	function revealCell(x: number, y: number) {
+		const render = new GameRender(app, cellSize);
 		if (board[y][x].status !== 'closed') {
 			return;
 		}
@@ -197,7 +158,8 @@
 		$currentScore = openCells;
 		const adjacentMines = getAdjacentMines(x, y);
 		if (adjacentMines > 0) {
-			createTextForCell(x, y, adjacentMines);
+			render.createTextForCell(x, y, adjacentMines);
+			// createTextForCell(x, y, adjacentMines);
 		} else {
 			for (let yOffset = -1; yOffset <= 1; yOffset++) {
 				for (let xOffset = -1; xOffset <= 1; xOffset++) {
@@ -251,28 +213,6 @@
 		}
 		return count;
 	}
-	function createImageForCell(x: number, y: number, image: string) {
-		const texture = PIXI.Texture.from(image);
-		const sprite = PIXI.Sprite.from(texture);
-		sprite.x = x * cellSize;
-		sprite.y = y * cellSize;
-		sprite.width = cellSize;
-		sprite.height = cellSize;
-		app.stage.addChild(sprite);
-	}
-	function createTextForCell(x: number, y: number, adjacentMines: number) {
-		const textStyle = new PIXI.TextStyle({
-			fill: 0x000000,
-			fontSize: cellSize / 2,
-			align: 'center'
-		});
-		const text = new PIXI.Text(adjacentMines.toString(), textStyle);
-		text.x = x * cellSize + cellSize / 2;
-		text.y = y * cellSize + cellSize / 2;
-		text.anchor.set(0.5);
-		app.stage.addChild(text);
-	}
-
 	function checkWin() {
 		// traveser all cells
 		for (let y = 0; y < rows; y++) {
@@ -309,6 +249,12 @@
 				restartGame();
 			});
 		}
+	}
+	$: if (gameOver) {
+		showResult();
+	}
+	$: if (win) {
+		showWinResult();
 	}
 </script>
 
