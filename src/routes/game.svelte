@@ -214,17 +214,25 @@
 		return count;
 	}
 	function checkWin() {
-		// traveser all cells
+		let allNonMinesRevealed = true;
+
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < columns; x++) {
-				// if any cell is closed and not a mine, then not win
 				if (board[y][x].status === 'closed' && !board[y][x].hasMine) {
-					return;
+					allNonMinesRevealed = false;
+					break;
 				}
 			}
+			if (!allNonMinesRevealed) {
+				break;
+			}
 		}
-		win = true;
+
+		if (allNonMinesRevealed) {
+			win = true;
+		}
 	}
+
 	function showWinResult() {
 		app.stage.interactive = false;
 		let winPopup = document.getElementById('winPopup');
