@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import type{Writable} from 'svelte/store';
 import { GameRender } from './gameRender';
+import * as PIXI from 'pixi.js';
 
 export const isGameWon = writable(false);
 
