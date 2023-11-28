@@ -1,4 +1,6 @@
 import { writable } from 'svelte/store';
+import type{Writable} from 'svelte/store';
+import { GameRender } from './gameRender';
 
 export const isGameWon = writable(false);
 
@@ -25,7 +27,6 @@ export function initializeBoard(board: Array<Array<{ hasMine: boolean; status: s
 }
 export function checkWin(board: Array<Array<{ hasMine: boolean; status: string }>>, rows: number, columns: number): boolean {
     let allNonMinesRevealed = true;
-
     for (let y = 0; y < rows; y++) {
         for (let x = 0; x < columns; x++) {
             if (board[y][x].status === 'closed' && !board[y][x].hasMine) {
@@ -37,7 +38,6 @@ export function checkWin(board: Array<Array<{ hasMine: boolean; status: string }
             break;
         }
     }
-
     return allNonMinesRevealed;
  }
 export function getAdjacentMines(board: Array<Array<{ hasMine: boolean; status: string }>>, x: number, y: number, rows: number, columns: number) {
@@ -56,8 +56,7 @@ export function getAdjacentMines(board: Array<Array<{ hasMine: boolean; status: 
     }
     return count;
 }
-export function toggleFlag(board: Array<Array<{ hasMine: boolean; status: string }>>, x: number, y: number, currentScore: { update: (fn: (n: number) => number) => void }) {
-    // alert('toggleFlag');
+export function toggleFlag(board: Array<Array<{ hasMine: boolean; status: string }>>, x: number, y: number,currentScore:Writable<number>) {
     if (board[y][x].status === 'closed') {
         board[y][x].status = 'flagged'; // if cell closed ,flag it
         currentScore.update((n) => n - 5);
@@ -65,7 +64,4 @@ export function toggleFlag(board: Array<Array<{ hasMine: boolean; status: string
         board[y][x].status = 'closed'; // unflag
         currentScore.update((n) => n + 1); // update score
     }
-    // checkWin();
-    const hasWon = checkWin(board, y, x);
-    isGameWon.set(hasWon);
-    return hasWon;}
+}
