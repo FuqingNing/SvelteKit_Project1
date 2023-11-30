@@ -34,6 +34,7 @@
 	"type": "module",
 	"dependencies": {
 		"@pixi/graphics-extras": "^7.3.0",
+		"pixi-svelte": "^0.0.9",
 		"pixi.js": "^7.2.4",
 		"webfontloader": "^1.6.28"
 	}
