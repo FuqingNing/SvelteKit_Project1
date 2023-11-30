@@ -16,13 +16,14 @@
 	} from './lib/gameConstant';
 
 	let app: PIXI.Application;
-	let win = false;
-	let gameOver = false;
+	let win = writable(false);
+	let gameOver = writable(false);
 	let render: GameRender;
 	let currentScore = writable(0);
 	let board: Array<Array<{ hasMine: boolean; status: string }>> = []; //status: closed, open, flagged
 	let boardVersion = writable(0);
-
+	$: scoreClass = $gameOver ? 'score game-over' : 'score';
+	const boardStore = writable(game.initialize(rows, columns, mineCount));
 	onMount(() => {
 		app = new PIXI.Application({
 			width: columns * cellSize,
@@ -39,7 +40,7 @@
 		render = new GameRender(app, cellSize);
 		drawBoard();
 
-		app.stage.interactive = !gameOver;
+		app.stage.interactive = !$gameOver;
 		app.stage.on('pointerdown', onCellClick);
 	});
 
@@ -54,7 +55,7 @@
 				let color; // local variable to store color
 				switch (cell.status) {
 					case 'closed':
-						if (gameOver) {
+						if ($gameOver) {
 							color = 0xff0000; // if game over, color is red
 							break;
 						} else {
@@ -104,18 +105,18 @@
 				if (board[y][x].hasMine) {
 					game.revealAllMines(board, rows, columns, render, BOMB_IMAGE_BASE64);
 					$boardVersion++;
-					gameOver = true;
+					$gameOver = true;
 					return;
 				}
 				game.revealCell(board, x, y, rows, columns, render, currentScore);
 			}
 			$boardVersion++; // update the board
-			win = game.checkWin(board, rows, columns);
+			$win = game.checkWin(board, rows, columns);
 		}
 	}
 
 	function restartGame() {
-		gameOver = false;
+		$gameOver = false;
 		app.stage.interactive = true;
 		$currentScore = 0;
 		game.initializeBoard(board, rows, columns, mineCount);
@@ -141,11 +142,11 @@
 		}
 	}
 
-	$: if (gameOver) {
+	$: if ($gameOver) {
 		showPopup('gameOverPopup', 'Game Over!');
 	}
 
-	$: if (win) {
+	$: if ($win) {
 		showPopup('winPopup', 'You Win!');
 	}
 
@@ -157,7 +158,7 @@
 <main>
 	<div id="game-board" />
 	<div id="bottom-bar">
-		<p id="score">Score: <b>{$currentScore}</b></p>
+		<p class={scoreClass}>Score: <b>{$currentScore}</b></p>
 	</div>
 </main>
 
@@ -235,5 +236,8 @@
 	.restart-button:hover {
 		background-color: #c0392b;
 		transform: scale(1.1);
+	}
+	.game-over {
+		color: red;
 	}
 </style>

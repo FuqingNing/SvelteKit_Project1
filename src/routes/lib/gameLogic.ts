@@ -25,6 +25,27 @@ export function initializeBoard(board: Array<Array<{ hasMine: boolean; status: s
         }
     }
 }
+export function initialize(rows:number, columns:number, mineCount:number) {
+    const board = [];
+    for (let y = 0; y < rows; y++) {
+        const row = [];
+        for (let x = 0; x < columns; x++) {
+            row.push({ hasMine: false, status: 'closed' });
+        }
+        board.push(row);
+    }
+    let minesPlaced = 0;
+    while (minesPlaced < mineCount) {
+        const x = Math.floor(Math.random() * columns);
+        const y = Math.floor(Math.random() * rows);
+        if (!board[y][x].hasMine) {
+            board[y][x].hasMine = true;
+            minesPlaced++;
+        }
+    }
+    return board;
+}
+
 export function checkWin(board: Array<Array<{ hasMine: boolean; status: string }>>, rows: number, columns: number): boolean {
     let allNonMinesRevealed = true;
     for (let y = 0; y < rows; y++) {
