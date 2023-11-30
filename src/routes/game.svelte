@@ -37,7 +37,6 @@
 		game.initializeBoard(board, rows, columns, mineCount);
 		// initialize render with function from gameRender.ts
 		render = new GameRender(app, cellSize);
-		//
 		drawBoard();
 
 		app.stage.interactive = !gameOver;
@@ -104,60 +103,17 @@
 				// If the cell contains a mine, reveal all mines and end the game
 				if (board[y][x].hasMine) {
 					game.revealAllMines(board, rows, columns, render, BOMB_IMAGE_BASE64);
-					// revealAllMines();
 					$boardVersion++;
 					gameOver = true;
 					return;
 				}
 				game.revealCell(board, x, y, rows, columns, render, currentScore);
-				// revealCell(x, y); // left click
 			}
 			$boardVersion++; // update the board
 			win = game.checkWin(board, rows, columns);
 		}
 	}
 
-	// function revealCell(x: number, y: number) {
-	// 	// Check if the selected cell is already open; if so, return early
-
-	// 	// Set the status of the cell to open
-	// 	board[y][x].status = 'open';
-
-	// 	// Calculate the total number of open cells for scoring purposes
-	// 	$currentScore++; // Update the current score
-
-	// 	// Calculate the number of adjacent mines
-	// 	const adjacentMines = game.getAdjacentMines(board, x, y, rows, columns);
-
-	// 	// If there are adjacent mines, display the count; otherwise, recursively open adjacent cells
-	// 	if (adjacentMines > 0) {
-	// 		render.createTextForCell(x, y, adjacentMines); // Display mine count for this cell
-	// 	} else {
-	// 		// Open adjacent cells if they are within the board's bounds and not already open
-	// 		for (let yOffset = -1; yOffset <= 1; yOffset++) {
-	// 			for (let xOffset = -1; xOffset <= 1; xOffset++) {
-	// 				if (xOffset === 0 && yOffset === 0) continue; // Skip the current cell
-	// 				const newX = x + xOffset;
-	// 				const newY = y + yOffset;
-	// 				if (newX >= 0 && newX < columns && newY >= 0 && newY < rows) {
-	// 					revealCell(newX, newY); // Recursive call to open adjacent cell
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// function revealAllMines() {
-	// 	$boardVersion++;
-	// 	for (let y = 0; y < rows; y++) {
-	// 		for (let x = 0; x < columns; x++) {
-	// 			if (board[y][x].hasMine) {
-	// 				board[y][x].status = 'mine';
-	// 				render.createImageForCell(x, y, BOMB_IMAGE_BASE64);
-	// 			}
-	// 		}
-	// 	}
-	// }
 	function restartGame() {
 		gameOver = false;
 		app.stage.interactive = true;
